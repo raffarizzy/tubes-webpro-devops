@@ -26,8 +26,9 @@ class User extends Authenticatable
         'birthDate',
         'gender',
         'pfpPath',
-        'is_verified_seller',
         'email_verified_at',
+        // 'is_verified_seller' sengaja TIDAK fillable: status seller hanya boleh
+        // diubah secara eksplisit (forceFill oleh admin), bukan lewat input form.
     ];
 
     /**
@@ -81,5 +82,4 @@ class User extends Authenticatable
             ['status' => 'active']
         );
     }
-
 }

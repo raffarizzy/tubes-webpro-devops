@@ -97,6 +97,12 @@ class ProfileController extends Controller
     */
     public function update(Request $request): RedirectResponse
     {
+        // Guard: status seller terverifikasi tidak boleh diubah dari form profil
+        // (mencegah Elevation of Privilege lewat mass-assignment).
+        if ($request->has('is_verified_seller')) {
+            abort(403, 'Anda tidak diizinkan mengubah status verifikasi seller.');
+        }
+
         try {
             $user = $request->user();
 
