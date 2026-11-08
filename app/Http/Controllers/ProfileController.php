@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Hash;
@@ -133,7 +134,20 @@ class ProfileController extends Controller
                 }
             }
 
-            // 3. UPDATE USER
+            // 3. NORMALISASI NOMOR HP (sebelum ada data yang disimpan)
+            $profileData = $request->only(['phone', 'birthDate', 'gender']);
+
+            if ($request->filled('phone')) {
+                try {
+                    $profileData['phone'] = User::normalizePhone($request->phone);
+                } catch (\InvalidArgumentException $e) {
+                    return back()
+                        ->withErrors(['phone' => $e->getMessage()])
+                        ->withInput();
+                }
+            }
+
+            // 4. UPDATE USER
             $userData = $request->only(['name', 'email']);
 
             if ($request->filled('password')) {
@@ -146,17 +160,17 @@ class ProfileController extends Controller
 
             $user->update($userData);
 
-            // 4. UPDATE PROFILE (NODE)
+            // 5. UPDATE PROFILE (NODE)
             $response = Http::patch(
                 config('services.node_api.url') . '/api/profile/' . $user->id,
-                $request->only(['phone', 'birthDate', 'gender'])
+                $profileData
             );
 
             if ($response->failed()) {
                 throw new \Exception('Gagal menyimpan data profil.');
             }
 
-            // 5. SUCCESS
+            // 6. SUCCESS
             return back()->with('success', 'Profil berhasil diperbarui');
 
         } catch (\Throwable $e) {

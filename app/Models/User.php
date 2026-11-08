@@ -82,4 +82,36 @@ class User extends Authenticatable
             ['status' => 'active']
         );
     }
+
+    /**
+     * Normalisasi nomor HP Indonesia ke format MSISDN standar "628xxxxxxxxx".
+     *
+     * Menerima format "08...", "+628...", "628...", atau "8...", termasuk yang
+     * mengandung spasi, strip, titik, atau tanda kurung.
+     *
+     * @throws \InvalidArgumentException jika nomor kosong atau bukan nomor HP Indonesia yang valid
+     */
+    public static function normalizePhone(?string $phone): string
+    {
+        $digits = preg_replace('/[\s\-\.\(\)]/', '', trim((string) $phone));
+
+        if ($digits === '' || !preg_match('/^\+?\d+$/', $digits)) {
+            throw new \InvalidArgumentException('Format nomor HP tidak valid.');
+        }
+
+        $digits = ltrim($digits, '+');
+
+        if (str_starts_with($digits, '62')) {
+            $digits = substr($digits, 2);
+        } elseif (str_starts_with($digits, '0')) {
+            $digits = substr($digits, 1);
+        }
+
+        // Nomor seluler Indonesia: diawali 8, total 9-12 digit setelah kode negara.
+        if (!preg_match('/^8\d{8,11}$/', $digits)) {
+            throw new \InvalidArgumentException('Format nomor HP tidak valid.');
+        }
+
+        return '62' . $digits;
+    }
 }
