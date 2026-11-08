@@ -58,7 +58,7 @@ class Alamat extends Model
             return false;
         }
 
-        return preg_match('/^[0-9]{5}$/D', $postalCode) === 1;
+        return preg_match('/^\d{5}$/D', $postalCode) === 1;
     }
 
     /**
