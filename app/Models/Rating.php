@@ -35,4 +35,34 @@ class Rating extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    /**
+     * Ringkasan ulasan: rata-rata (1 desimal), jumlah, dan sebaran per bintang 1-5.
+     * Nilai di luar 1..5 diabaikan.
+     *
+     * @param  iterable<int, object|array>  $ratings
+     * @return array{average: float, count: int, distribution: array<int, int>}
+     */
+    public static function summarize(iterable $ratings): array
+    {
+        $distribution = [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0];
+        $sum = 0;
+        $count = 0;
+
+        foreach ($ratings as $item) {
+            $value = (int) (is_array($item) ? ($item['rating'] ?? 0) : ($item->rating ?? 0));
+            if ($value < 1 || $value > 5) {
+                continue;
+            }
+            $distribution[$value]++;
+            $sum += $value;
+            $count++;
+        }
+
+        return [
+            'average' => $count > 0 ? round($sum / $count, 1) : 0.0,
+            'count' => $count,
+            'distribution' => $distribution,
+        ];
+    }
 }
