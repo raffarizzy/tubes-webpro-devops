@@ -26,7 +26,8 @@
   "jest": {
     "testEnvironment": "node",
     "collectCoverageFrom": [
-      "src/utils/**/*.js"
+      "src/utils/**/*.js",
+      "src/config/**/*.js"
     ],
     "coverageReporters": [
       "text",

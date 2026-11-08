@@ -30,6 +30,15 @@ class BarangKeranjangController extends Controller
                 'jumlah' => 'required|integer|min:1',
             ]);
 
+            // Validasi ketersediaan stok menggunakan helper domain logic
+            $product = Product::find($validated['product_id']);
+            if (!$product || !BarangKeranjang::canAddQuantity((int) $product->stok, (int) $validated['jumlah'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Stok tidak mencukupi untuk jumlah yang diminta.',
+                ], 422);
+            }
+
             /** @var User $user */
             $user = Auth::user();
 
