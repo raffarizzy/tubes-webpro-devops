@@ -13,6 +13,12 @@ return new class extends Migration
     public function up(): void
     {
         if (! in_array(DB::getDriverName(), ['mysql', 'mariadb'], true)) {
+            // SQLite (test/CI): samakan daftar status dengan MySQL lewat schema builder.
+            Schema::table('orders', function (Blueprint $table) {
+                $table->enum('status', ['pending', 'paid', 'processing', 'shipped', 'finished', 'cancelled'])
+                    ->default('pending')->change();
+            });
+
             return;
         }
 
