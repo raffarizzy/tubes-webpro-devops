@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\OrderItems;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -81,6 +82,21 @@ class RatingController extends Controller
             'review'     => 'required|string|max:1000',
         ]);
 
+        // Verifikasi pembeli sah (mencegah fake review / ulasan dari user yang belum pernah beli)
+        if (!self::isVerifiedBuyer(auth()->id(), (int) $validated['product_id'])) {
+            return back()
+                ->withErrors(['product_id' => 'Anda hanya dapat memberikan ulasan untuk produk yang telah Anda beli.'])
+                ->withInput();
+        }
+
+        // Sanitasi input ulasan untuk mencegah Stored XSS
+        $sanitizedReview = self::sanitizeReview($validated['review']);
+        if ($sanitizedReview === '') {
+            return back()
+                ->withErrors(['review' => 'Isi ulasan tidak boleh kosong.'])
+                ->withInput();
+        }
+
         try {
             // Cek duplikasi sebelum post ke Node API
             $checkResponse = Http::timeout(10)->get($this->nodeApiUrl . '/api/ratings', [
@@ -102,7 +118,7 @@ class RatingController extends Controller
                     'user_id'    => auth()->id(),
                     'product_id' => $validated['product_id'],
                     'rating'     => $validated['rating'],
-                    'review'     => $validated['review'],
+                    'review'     => $sanitizedReview,
                 ]
             );
 
@@ -146,5 +162,50 @@ class RatingController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', 'Koneksi ke server rating gagal');
         }
+    }
+
+    /**
+     * Verifikasi pembeli sah (Verified Buyer) untuk mencegah fake review.
+     * Hanya pembeli yang memiliki pesanan sah yang diizinkan mengulas.
+     */
+    public static function isVerifiedBuyer(?int $userId, int $productId): bool
+    {
+        if (!$userId) {
+            return false;
+        }
+
+        return OrderItems::where('product_id', $productId)
+            ->whereHas('order', function ($query) use ($userId) {
+                $query->where('user_id', $userId)
+                    ->whereIn('status', ['paid', 'processing', 'shipped', 'finished']);
+            })
+            ->exists();
+    }
+
+    /**
+     * Sanitasi isi teks ulasan untuk mencegah celah keamanan Stored XSS.
+     */
+    public static function sanitizeReview(?string $review): string
+    {
+        if ($review === null) {
+            return '';
+        }
+
+        return trim(strip_tags($review));
+    }
+
+    /**
+     * Label sentimen tingkat kepuasan berdasarkan bintang rating 1-5.
+     */
+    public static function getStarLabel(int $rating): string
+    {
+        return match ($rating) {
+            1 => 'Sangat Buruk',
+            2 => 'Buruk',
+            3 => 'Cukup',
+            4 => 'Puas',
+            5 => 'Sangat Puas',
+            default => 'Tidak Valid',
+        };
     }
 }
