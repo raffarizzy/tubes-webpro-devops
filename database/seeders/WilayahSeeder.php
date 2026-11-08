@@ -47,3 +47,4 @@ class WilayahSeeder extends Seeder
         }
     }
 }
+

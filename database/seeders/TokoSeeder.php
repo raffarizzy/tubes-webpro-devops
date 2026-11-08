@@ -33,3 +33,4 @@ class TokoSeeder extends Seeder
         }
     }
 }
+

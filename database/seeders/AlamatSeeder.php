@@ -46,3 +46,4 @@ class AlamatSeeder extends Seeder
         }
     }
 }
+

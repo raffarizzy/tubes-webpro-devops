@@ -116,3 +116,4 @@ class ProductSeeder extends Seeder
         }
     }
 }
+

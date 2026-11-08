@@ -43,3 +43,4 @@ class KeranjangSeeder extends Seeder
         }
     }
 }
+
