@@ -31,6 +31,17 @@ class Toko extends Model
     }
 
     /**
+     * Cari toko berdasarkan ID Laravel atau node_toko_id secara fleksibel.
+     */
+    public static function findByIdOrNodeId($id): ?self
+    {
+        return self::where(function ($q) use ($id) {
+            $q->where('id', $id)
+              ->orWhere('node_toko_id', $id);
+        })->first();
+    }
+
+    /**
      * Otorisasi kepemilikan toko terpusat untuk mencegah celah IDOR.
      */
     public function isOwnedBy(int|User|null $user): bool

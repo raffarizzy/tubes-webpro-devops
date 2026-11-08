@@ -377,11 +377,7 @@ class TokoController extends Controller
             ]);
 
             // 1. Update di database Laravel
-            // Cari berdasarkan ID Laravel atau node_toko_id
-            $toko = Toko::where(function($q) use ($id) {
-                $q->where('id', $id)
-                  ->orWhere('node_toko_id', $id);
-            })->first();
+            $toko = Toko::findByIdOrNodeId($id);
 
             if (!$toko) {
                 return response()->json([
@@ -486,11 +482,7 @@ class TokoController extends Controller
     public function destroy($id)
     {
         try {
-            // Cari berdasarkan ID Laravel atau node_toko_id
-            $toko = Toko::where(function($q) use ($id) {
-                $q->where('id', $id)
-                  ->orWhere('node_toko_id', $id);
-            })->first();
+            $toko = Toko::findByIdOrNodeId($id);
 
             if (!$toko) {
                 return response()->json([
