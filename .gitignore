@@ -22,3 +22,6 @@ node_modules/
 Homestead.json
 Homestead.yaml
 Thumbs.db
+# Output coverage test
+node-api/coverage/
+coverage.xml
