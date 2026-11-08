@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Alamat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -14,6 +15,22 @@ class AlamatController extends Controller
     public function __construct()
     {
         $this->nodeApiUrl = config('services.node_api.url') . '/api';
+    }
+
+    /**
+     * Aturan validasi kode pos: harus tepat 5 digit angka agar diterima API kurir.
+     */
+    private function kodePosRules(): array
+    {
+        return [
+            'nullable',
+            'string',
+            function (string $attribute, mixed $value, \Closure $fail) {
+                if (!is_string($value) || !Alamat::isValidPostalCode($value)) {
+                    $fail('Kode pos harus terdiri dari tepat 5 digit angka.');
+                }
+            },
+        ];
     }
 
     /**
@@ -81,7 +98,7 @@ class AlamatController extends Controller
             'provinsi' => 'nullable|string',
             'kota' => 'nullable|string',
             'kecamatan' => 'nullable|string',
-            'kode_pos' => 'nullable|string|max:10',
+            'kode_pos' => $this->kodePosRules(),
             'kode_wilayah' => 'nullable|string',
             'nama_penerima' => 'required|string|max:255',
             'nomor_penerima' => 'required|string|max:20',
@@ -169,7 +186,7 @@ class AlamatController extends Controller
             'provinsi' => 'nullable|string',
             'kota' => 'nullable|string',
             'kecamatan' => 'nullable|string',
-            'kode_pos' => 'nullable|string|max:10',
+            'kode_pos' => $this->kodePosRules(),
             'kode_wilayah' => 'nullable|string',
             'nama_penerima' => 'required|string|max:255',
             'nomor_penerima' => 'required|string|max:20',

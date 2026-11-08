@@ -23,6 +23,13 @@ class DatabaseSeeder extends Seeder
         // ]);
         $this->call([
             CategorySeeder::class,
+            WilayahSeeder::class,
+            UserSeeder::class,
+            TokoSeeder::class,
+            ProductSeeder::class,
+            AlamatSeeder::class,
+            KeranjangSeeder::class,
+            OrderSeeder::class,
         ]);
     }
 }

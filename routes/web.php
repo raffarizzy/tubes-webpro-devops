@@ -11,6 +11,7 @@ use App\Http\Controllers\OrderProxyController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\TokoController;
 use App\Http\Controllers\RatingController;
+use App\Http\Controllers\CategoryController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -31,6 +32,10 @@ Route::get('/produk/{id}', [ProductController::class, 'show'])
 // API Products (Public)
 Route::get('/api/products', [ProductController::class, 'index'])->name('api.products.index');
 Route::get('/api/products/{id}', [ProductController::class, 'show'])->name('api.products.show');
+
+// API Categories (Public)
+Route::get('/api/categories', [CategoryController::class, 'index'])->name('api.categories.index');
+Route::post('/api/categories', [CategoryController::class, 'store'])->name('api.categories.store');
 
 
 // ============================================
@@ -125,6 +130,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/toko/{id}', [TokoController::class, 'show'])->name('toko.show');
     Route::post('/toko', [TokoController::class, 'store'])->name('toko.store');
     Route::put('/toko/{id}', [TokoController::class, 'update'])->name('toko.update');
+    Route::delete('/toko/{id}', [TokoController::class, 'destroy'])->name('toko.destroy');
     
     // Alur Pesanan Toko
     Route::post('/toko/orders/{id}/accept', [TokoController::class, 'acceptOrder'])->name('toko.order.accept');
