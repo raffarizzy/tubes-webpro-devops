@@ -125,6 +125,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/toko/{id}', [TokoController::class, 'show'])->name('toko.show');
     Route::post('/toko', [TokoController::class, 'store'])->name('toko.store');
     Route::put('/toko/{id}', [TokoController::class, 'update'])->name('toko.update');
+    Route::delete('/toko/{id}', [TokoController::class, 'destroy'])->name('toko.destroy');
     
     // Alur Pesanan Toko
     Route::post('/toko/orders/{id}/accept', [TokoController::class, 'acceptOrder'])->name('toko.order.accept');

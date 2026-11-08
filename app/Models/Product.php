@@ -39,5 +39,21 @@ class Product extends Model
     {
         return $this->belongsTo(Category::class);
     }
-}
 
+    /**
+     * Harga sebelum diskon, dari harga jual (sudah terdiskon) dan persen diskon.
+     * Diskon di luar 1..99 dianggap tidak ada, termasuk 100% yang sebelumnya
+     * menyebabkan pembagian dengan nol di tampilan detail produk.
+     */
+    public static function hargaAsli(int|float|string|null $harga, int|float|string|null $diskon): int
+    {
+        $harga = (float) $harga;
+        $diskon = (float) $diskon;
+
+        if ($harga <= 0 || $diskon <= 0 || $diskon >= 100) {
+            return (int) round(max($harga, 0));
+        }
+
+        return (int) round($harga / (1 - $diskon / 100));
+    }
+}
