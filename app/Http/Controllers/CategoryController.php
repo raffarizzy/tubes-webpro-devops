@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 class CategoryController extends Controller
 {
     /**
-     * Menampilkan daftar kategori dengan filter harga opsional dan pencarian.
+     * Display a listing of the resource.
      */
     public function index(Request $request): JsonResponse
     {
@@ -61,7 +61,15 @@ class CategoryController extends Controller
     }
 
     /**
-     * Menyimpan kategori baru dengan auto-slug.
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created resource in storage.
      */
     public function store(Request $request): JsonResponse
     {
@@ -87,81 +95,34 @@ class CategoryController extends Controller
     }
 
     /**
-     * Menampilkan detail kategori beserta produk dan badge status stok.
+     * Display the specified resource.
      */
-    public function show(Category $category, Request $request): JsonResponse
+    public function show(Category $category)
     {
-        $productsQuery = $category->products();
-
-        if ($request->hasAny(['min_price', 'max_price'])) {
-            $range = Category::sanitizePriceRange(
-                $request->query('min_price'),
-                $request->query('max_price')
-            );
-
-            if ($range['min'] > 0) {
-                $productsQuery->where('harga', '>=', $range['min']);
-            }
-            if ($range['max'] > 0) {
-                $productsQuery->where('harga', '<=', $range['max']);
-            }
-        }
-
-        $products = $productsQuery->get()->map(function (Product $product) {
-            return [
-                'id' => $product->id,
-                'nama' => $product->nama,
-                'harga' => $product->harga,
-                'stok' => $product->stok,
-                'stock_badge' => Product::getStockStatusBadge((int) $product->stok),
-            ];
-        });
-
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'id' => $category->id,
-                'judulKategori' => $category->judulKategori,
-                'slug' => Category::createSlug($category->judulKategori ?? ''),
-                'products' => $products,
-            ],
-        ]);
+        //
     }
 
     /**
-     * Memperbarui data kategori.
+     * Show the form for editing the specified resource.
      */
-    public function update(Request $request, Category $category): JsonResponse
+    public function edit(Category $category)
     {
-        $validated = $request->validate([
-            'judulKategori' => 'required|string|max:255',
-        ]);
-
-        $category->update([
-            'judulKategori' => $validated['judulKategori'],
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Kategori berhasil diperbarui',
-            'data' => [
-                'id' => $category->id,
-                'judulKategori' => $category->judulKategori,
-                'slug' => Category::createSlug($category->judulKategori),
-            ],
-        ]);
+        //
     }
 
     /**
-     * Menghapus kategori.
+     * Update the specified resource in storage.
      */
-    public function destroy(Category $category): JsonResponse
+    public function update(Request $request, Category $category)
     {
-        $category->delete();
+        //
+    }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Kategori berhasil dihapus',
-        ]);
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Category $category)
+    {
+        //
     }
 }

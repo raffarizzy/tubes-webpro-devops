@@ -113,7 +113,7 @@
           <span id="product-price" class="fw-bold fs-4 color-medcom">Rp {{ number_format($product->harga, 0, ',', '.') }}</span>
           @if($product->diskon && $product->diskon > 0)
             @php
-              $hargaAsli = round($product->harga / (1 - $product->diskon / 100));
+              $hargaAsli = \App\Models\Product::hargaAsli($product->harga, $product->diskon);
             @endphp
             <span id="product-original-price" class="text-muted text-decoration-line-through">Rp {{ number_format($hargaAsli, 0, ',', '.') }}</span>
             <span id="product-discount" class="badge bg-danger">-{{ $product->diskon }}%</span>

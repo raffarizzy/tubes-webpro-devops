@@ -2,6 +2,12 @@
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Toko;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+uses(TestCase::class, RefreshDatabase::class);
 
 /* =========================================================================
  * 1. FITUR ALERT STATUS KETERSEDIAAN STOK (Product::getStockStatusBadge)
@@ -97,6 +103,38 @@ test('test_price_range_sanitizer_handles_inverted_string_inputs', function () {
     $range = Category::sanitizePriceRange('900000', '250000');
     expect($range['min'])->toBe(250000)
         ->and($range['max'])->toBe(900000);
+
+    // Verifikasi integrasi filter harga & badge stok pada endpoint katalog kategori
+    $user = User::factory()->create();
+    $toko = Toko::create([
+        'user_id' => $user->id,
+        'node_toko_id' => 'node-toko-1',
+        'nama_toko' => 'Bengkel Uji',
+        'deskripsi_toko' => 'Toko Suku Cadang',
+        'lokasi' => 'Bandung',
+        'provinsi' => 'Jawa Barat',
+        'kota' => 'Bandung',
+        'kecamatan' => 'Coblong',
+        'kode_pos' => '40132',
+        'kode_wilayah' => '32.73',
+        'logo_path' => 'toko/logo.webp',
+    ]);
+    $category = Category::create(['judulKategori' => 'Oli & Pelumas']);
+    $category->products()->create([
+        'toko_id' => $toko->id,
+        'nama' => 'Oli Sintetis 10W-40',
+        'deskripsi' => 'Pelumas mesin',
+        'harga' => 85000,
+        'diskon' => 0,
+        'stok' => 3,
+        'imagePath' => 'produk/default.png',
+        'berat' => 1000,
+    ]);
+
+    $response = $this->getJson('/api/categories?q=Oli&min_price=150000&max_price=50000');
+    $response->assertStatus(200)
+        ->assertJsonPath('data.0.slug', 'oli-pelumas')
+        ->assertJsonPath('data.0.products.0.stock_badge.label', 'Stok Menipis');
 });
 
 /* =========================================================================
@@ -107,6 +145,12 @@ test('test_category_slug_generator_creates_url_safe_slug', function () {
     $slug = Category::createSlug('Oli & Pelumas Mesin Motor');
 
     expect($slug)->toBe('oli-pelumas-mesin-motor');
+
+    $response = $this->postJson('/api/categories', [
+        'judulKategori' => 'Oli & Pelumas Mesin Motor',
+    ]);
+    $response->assertStatus(201)
+        ->assertJsonPath('data.slug', 'oli-pelumas-mesin-motor');
 });
 
 test('test_category_slug_generator_handles_special_characters_and_symbols', function () {

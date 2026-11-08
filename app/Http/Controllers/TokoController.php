@@ -377,25 +377,20 @@ class TokoController extends Controller
             ]);
 
             // 1. Update di database Laravel
-            // Cari berdasarkan ID Laravel atau node_toko_id yang sesuai dengan user yang login
-            $toko = Toko::where(function($q) use ($id) {
-                $q->where('id', $id)
-                  ->orWhere('node_toko_id', $id);
-            })->where('user_id', auth()->id())->first();
+            $toko = Toko::findByIdOrNodeId($id);
 
-            // Jika tidak ditemukan dengan user_id, cek apakah memang tokonya ada tapi bukan milik user ini
             if (!$toko) {
-                $exists = Toko::where('id', $id)->orWhere('node_toko_id', $id)->exists();
-                if ($exists) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Anda tidak memiliki akses untuk mengupdate toko ini'
-                    ], 403);
-                }
                 return response()->json([
                     'success' => false,
                     'message' => 'Toko tidak ditemukan'
                 ], 404);
+            }
+
+            if (!$toko->isOwnedBy(auth()->id())) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki akses untuk mengupdate toko ini'
+                ], 403);
             }
 
             $logoPath = $toko->logo_path;
@@ -487,24 +482,20 @@ class TokoController extends Controller
     public function destroy($id)
     {
         try {
-            // Cari berdasarkan ID Laravel atau node_toko_id
-            $toko = Toko::where(function($q) use ($id) {
-                $q->where('id', $id)
-                  ->orWhere('node_toko_id', $id);
-            })->where('user_id', auth()->id())->first();
+            $toko = Toko::findByIdOrNodeId($id);
 
             if (!$toko) {
-                $exists = Toko::where('id', $id)->orWhere('node_toko_id', $id)->exists();
-                if ($exists) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Anda tidak memiliki akses untuk menghapus toko ini'
-                    ], 403);
-                }
                 return response()->json([
                     'success' => false,
                     'message' => 'Toko tidak ditemukan'
                 ], 404);
+            }
+
+            if (!$toko->isOwnedBy(auth()->id())) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki akses untuk menghapus toko ini'
+                ], 403);
             }
 
             // 1. Hapus dari Node.js API
@@ -522,8 +513,8 @@ class TokoController extends Controller
                 Storage::disk('public')->delete($toko->logo_path);
             }
 
-            // 3. Hapus dari database Laravel
-            $toko->delete();
+            // 3. Hapus dari database Laravel beserta produknya secara aman
+            $toko->deleteWithProducts();
 
             return response()->json([
                 'success' => true,
@@ -584,7 +575,7 @@ class TokoController extends Controller
                 return back()->with('error', 'Anda tidak memiliki akses ke pesanan ini.');
             }
 
-            if ($order->status !== 'paid') {
+            if ($order->status !== 'paid' || ! $order->canTransitionTo('processing')) {
                 return back()->with('error', 'Hanya pesanan yang sudah dibayar yang dapat diterima.');
             }
 
@@ -613,7 +604,7 @@ class TokoController extends Controller
                 return back()->with('error', 'Anda tidak memiliki akses ke pesanan ini.');
             }
 
-            if (!in_array($order->status, ['paid', 'processing'])) {
+            if (! $order->canTransitionTo('cancelled')) {
                 return back()->with('error', 'Pesanan ini tidak dapat dibatalkan.');
             }
 
@@ -646,7 +637,7 @@ class TokoController extends Controller
                 return back()->with('error', 'Anda tidak memiliki akses ke pesanan ini.');
             }
 
-            if ($order->status !== 'processing') {
+            if (! $order->canTransitionTo('shipped')) {
                 return back()->with('error', 'Hanya pesanan yang sedang diproses yang dapat dikirim.');
             }
 

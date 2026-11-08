@@ -78,8 +78,9 @@ class ProductController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            $avgRating = $ratings->avg('rating') ?? 0;
-            $ratingCount = $ratings->count();
+            $summary = \App\Models\Rating::summarize($ratings);
+            $avgRating = $summary['average'];
+            $ratingCount = $summary['count'];
 
             return view('detail-produk', compact('product', 'ratings', 'avgRating', 'ratingCount'));
 
@@ -103,8 +104,9 @@ class ProductController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            $avgRating = $ratings->avg('rating') ?? 0;
-            $ratingCount = $ratings->count();
+            $summary = \App\Models\Rating::summarize($ratings);
+            $avgRating = $summary['average'];
+            $ratingCount = $summary['count'];
 
             return view('detail-produk', compact('product', 'ratings', 'avgRating', 'ratingCount'));
         }
