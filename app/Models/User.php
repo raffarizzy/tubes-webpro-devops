@@ -114,4 +114,51 @@ class User extends Authenticatable
 
         return '62' . $digits;
     }
+
+    /**
+     * Email yang disamarkan untuk tampilan publik, contoh: "r***y@gmail.com".
+     */
+    public function getMaskedEmail(): string
+    {
+        $email = (string) $this->email;
+        $atPos = strrpos($email, '@');
+
+        if ($atPos === false) {
+            return self::maskWord($email, 1);
+        }
+
+        $local = substr($email, 0, $atPos);
+        $domain = substr($email, $atPos);
+
+        $masked = mb_strlen($local) <= 2
+            ? mb_substr($local, 0, 1) . '***'
+            : mb_substr($local, 0, 1) . '***' . mb_substr($local, -1);
+
+        return $masked . $domain;
+    }
+
+    /**
+     * Nama yang disamarkan untuk tampilan publik, contoh: "Raf*** Riz***".
+     */
+    public function getMaskedName(): string
+    {
+        $words = preg_split('/\s+/', trim((string) $this->name), -1, PREG_SPLIT_NO_EMPTY);
+
+        if (empty($words)) {
+            return 'Anonymous';
+        }
+
+        return implode(' ', array_map(fn (string $word) => self::maskWord($word, 3), $words));
+    }
+
+    /**
+     * Tampilkan beberapa huruf awal lalu "***". Kata pendek hanya
+     * menampilkan huruf pertama agar tidak terbaca utuh.
+     */
+    private static function maskWord(string $word, int $visible): string
+    {
+        $shown = mb_strlen($word) > $visible ? $visible : 1;
+
+        return mb_substr($word, 0, $shown) . '***';
+    }
 }
