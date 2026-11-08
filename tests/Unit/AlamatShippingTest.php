@@ -52,7 +52,7 @@ describe('setAsPrimary', function () {
         $alamatUtama = ($this->buatAlamat)($this->user, true);
         $alamatBiasa = ($this->buatAlamat)($this->user, false);
 
-        // Dipanggil dua kali pada alamat yang sudah utama tidak boleh error / merusak data
+        // Dipanggil dua kali pada alamat yang sudah utama tidak boleh error / merusak dataa
         $alamatUtama->setAsPrimary();
         $alamatUtama->setAsPrimary();
 
