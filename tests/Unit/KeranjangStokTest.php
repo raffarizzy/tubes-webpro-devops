@@ -68,6 +68,41 @@ test('calculate subtotal handles full discount or zero price', function () {
     expect($item->getSubtotal())->toBe(100000);
 });
 
+test('calculate subtotal handles nominal discount, excess discount, and zero quantity or price', function () {
+    // 1. Diskon nominal langsung (diskon > 100 && diskon < harga)
+    $nominalDiscountProduct = new Product([
+        'harga' => 50000,
+        'diskon' => 15000, // diskon nominal Rp 15.000 -> harga satuan 35.000
+    ]);
+    $nominalItem = new BarangKeranjang(['jumlah' => 2, 'harga' => 50000]);
+    $nominalItem->setRelation('product', $nominalDiscountProduct);
+    expect($nominalItem->getSubtotal())->toBe(70000);
+
+    // 2. Diskon melebihi harga (diskon >= harga)
+    $excessDiscountProduct = new Product([
+        'harga' => 50000,
+        'diskon' => 60000, // diskon lebih besar dari harga
+    ]);
+    $excessItem = new BarangKeranjang(['jumlah' => 1, 'harga' => 50000]);
+    $excessItem->setRelation('product', $excessDiscountProduct);
+    expect($excessItem->getSubtotal())->toBe(0);
+
+    // 3. Harga atau kuantitas <= 0
+    $zeroPriceItem = new BarangKeranjang(['jumlah' => 2, 'harga' => 0]);
+    expect($zeroPriceItem->getSubtotal())->toBe(0);
+
+    $zeroQtyItem = new BarangKeranjang(['jumlah' => 0, 'harga' => 50000]);
+    expect($zeroQtyItem->getSubtotal())->toBe(0);
+
+    // 4. Fallback harga dari product relasi jika $item->harga null
+    $fallbackItem = new BarangKeranjang(['jumlah' => 2]);
+    $fallbackProduct = new Product(['harga' => 25000, 'diskon' => 0]);
+    $fallbackItem->setRelation('product', $fallbackProduct);
+    expect($fallbackItem->getSubtotal())->toBe(50000)
+        // 5. Test Accessor $item->subtotal
+        ->and($fallbackItem->subtotal)->toBe(50000);
+});
+
 test('filter available items removes out of stock or deleted products', function () {
     $cart = new Keranjang(['user_id' => 1]);
 
@@ -103,5 +138,8 @@ test('filter available items removes out of stock or deleted products', function
 
     expect($available)->toHaveCount(1)
         ->and($available->first()->id)->toBe(101)
-        ->and($available->first()->product->nama)->toBe('Busi Denso');
+        ->and($available->first()->product->nama)->toBe('Busi Denso')
+        // Total Items dan Total Price terhitung hanya dari item yang valid
+        ->and($cart->total_items)->toBe(2)
+        ->and($cart->total_price)->toBe(100000);
 });
