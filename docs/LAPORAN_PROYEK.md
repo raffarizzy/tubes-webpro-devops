@@ -136,8 +136,38 @@ Setiap anggota diwajibkan melakukan minimal 3 perubahan fungsional yang signifik
   - Mengabaikan secara otomatis data rating anomali (< 1 atau > 5).
 - **Commit:** `0cfeee1`.
 
-### 3.4 Perbaikan Pondasi (Bug Fixes)
+### 3.4 Perubahan 4 (Frizam): `BarangKeranjang::canAddQuantity()` & Pencegahan Stok Minus
+- **Nama Mahasiswa & NIM:** Frizam Maulana (103022300049)
+- **Lokasi Berkas:** `app/Models/BarangKeranjang.php`, `app/Http/Controllers/BarangKeranjangController.php`.
+- **Masalah Sebelum Perubahan:** Tidak ada proteksi domain logic di model keranjang untuk membatasi penambahan jumlah barang berdasarkan stok gudang. Akibatnya, request manipulatif dari client dapat memesan barang melebihi stok yang tersedia.
+- **Implementasi Solusi:**
+  - Method statik `BarangKeranjang::canAddQuantity(int $stokTersedia, int $requestedQty): bool` dengan guard clause:
+    - Menolak jika `$requestedQty <= 0` atau `$stokTersedia <= 0`.
+    - Menolak jika `$requestedQty > $stokTersedia`.
+  - Diintegrasikan ke dalam `BarangKeranjangController::store()` sebelum request diteruskan ke backend API.
+
+### 3.5 Perubahan 5 (Frizam): `BarangKeranjang::getSubtotal()` & Kalkulasi Subtotal Otomatis
+- **Nama Mahasiswa & NIM:** Frizam Maulana (103022300049)
+- **Lokasi Berkas:** `app/Models/BarangKeranjang.php`.
+- **Masalah Sebelum Perubahan:** Subtotal item keranjang sebelumnya hanya mengalikan `harga * jumlah` tanpa memperhitungkan diskon produk (`Product::$diskon`), sehingga pembeli ditagih harga normal meskipun produk sedang promo.
+- **Implementasi Solusi:**
+  - Method `BarangKeranjang::getSubtotal(): int` yang otomatis menghitung potongan diskon (baik persentase 1..100% maupun nominal) sebelum dikalikan dengan kuantitas: `(harga - diskon) * quantity`.
+  - Mengamankan diskon batas 100% (gratis) agar tidak menghasilkan nilai negatif atau error kalkulasi.
+
+### 3.6 Perubahan 6 (Frizam): `Keranjang::filterAvailableItems()` & Sanitasi Item Keranjang
+- **Nama Mahasiswa & NIM:** Frizam Maulana (103022300049)
+- **Lokasi Berkas:** `app/Models/Keranjang.php`.
+- **Masalah Sebelum Perubahan:** Keranjang belanja tetap menampilkan dan menghitung barang yang telah dihapus oleh penjual (soft-deleted) atau yang stoknya telah habis sebelum pembeli melakukan checkout.
+- **Implementasi Solusi:**
+  - Method `Keranjang::filterAvailableItems(): Collection` yang secara otomatis menyaring koleksi item keranjang:
+    - Mengeliminasi item jika `product` null atau soft-deleted (`deleted_at !== null`).
+    - Mengeliminasi item jika stok produk di gudang bernilai `<= 0`.
+  - Terintegrasi langsung dengan accessor `total_items` dan `total_price` di model Keranjang.
+
+### 3.7 Perbaikan Pondasi & Database Seeder Otomatis (Bug Fixes)
 - Memperbaiki `database/factories/UserFactory.php` dengan menambahkan atribut wajib `phone`.
+- Membuat migrasi tabel `wilayah` (`2026_06_17_000000_create_wilayah_table.php`) yang sebelumnya hilang dari repositori.
+- Membangun pipeline seeder lengkap (`WilayahSeeder`, `UserSeeder`, `TokoSeeder`, `ProductSeeder`, `AlamatSeeder`, `KeranjangSeeder`, `OrderSeeder`) sehingga database terinjeksi otomatis hanya dengan menjalankan `php artisan migrate:fresh --seed`.
 - Menambahkan driver guard pada migrasi `2026_06_12_134104` dan `2026_06_14_151545` agar perintah `ALTER TABLE ... MODIFY COLUMN` khusus MySQL tidak memecahkan pengujian pada SQLite.
 - Menambahkan `email_verified_at` ke dalam `$fillable` model `User`.
 - Menyediakan mock `Http::fake()` pada pengujian profil agar test suite tidak bergantung pada instansi Node.js eksternal.
@@ -178,6 +208,13 @@ Sebanyak **32 test cases baru** ditambahkan untuk memastikan seluruh perubahan k
    - Distribusi frekuensi per bintang (1–5).
    - Eliminasi rating di luar rentang valid (<1 atau >5).
    - Dukungan polymorphic input (Eloquent model instances maupun plain arrays).
+4. **`tests/Unit/KeranjangStokTest.php` (6 tests - Frizam):**
+   - Penolakan penambahan kuantitas saat `requestedQty` melebihi batas stok gudang.
+   - Izin penambahan kuantitas saat stok tersedia mencukupi (termasuk batas tepat stok).
+   - Penolakan permintaan kuantitas non-positif (0 atau minus) serta perlindungan stok minus.
+   - Perhitungan subtotal item keranjang akurat setelah pemotongan diskon persentase produk.
+   - Penanganan nilai batas diskon 100% (gratis) dan barang tanpa diskon.
+   - Penyaringan item keranjang yang membuang produk soft-deleted, stok habis, atau produk null.
 
 #### B. Node.js API (Jest - 14 Test Cases Baru)
 1. **`node-api/tests/response.test.js` (9 tests):**
