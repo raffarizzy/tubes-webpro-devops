@@ -145,6 +145,7 @@ Setiap anggota diwajibkan melakukan minimal 3 perubahan fungsional yang signifik
     - Menolak jika `$requestedQty <= 0` atau `$stokTersedia <= 0`.
     - Menolak jika `$requestedQty > $stokTersedia`.
   - Diintegrasikan ke dalam `BarangKeranjangController::store()` sebelum request diteruskan ke backend API.
+  - **Commit:** `a301717` (*feat: validasi stok minus, subtotal diskon otomatis, sanitasi keranjang, seeder inject db lengkap + unit test*).
 
 ### 3.5 Perubahan 5 (Frizam): `BarangKeranjang::getSubtotal()` & Kalkulasi Subtotal Otomatis
 - **Nama Mahasiswa & NIM:** Frizam Maulana (103022300049)
@@ -153,6 +154,7 @@ Setiap anggota diwajibkan melakukan minimal 3 perubahan fungsional yang signifik
 - **Implementasi Solusi:**
   - Method `BarangKeranjang::getSubtotal(): int` yang otomatis menghitung potongan diskon (baik persentase 1..100% maupun nominal) sebelum dikalikan dengan kuantitas: `(harga - diskon) * quantity`.
   - Mengamankan diskon batas 100% (gratis) agar tidak menghasilkan nilai negatif atau error kalkulasi.
+  - **Commit:** `a301717`.
 
 ### 3.6 Perubahan 6 (Frizam): `Keranjang::filterAvailableItems()` & Sanitasi Item Keranjang
 - **Nama Mahasiswa & NIM:** Frizam Maulana (103022300049)
@@ -163,6 +165,7 @@ Setiap anggota diwajibkan melakukan minimal 3 perubahan fungsional yang signifik
     - Mengeliminasi item jika `product` null atau soft-deleted (`deleted_at !== null`).
     - Mengeliminasi item jika stok produk di gudang bernilai `<= 0`.
   - Terintegrasi langsung dengan accessor `total_items` dan `total_price` di model Keranjang.
+  - **Commit:** `a301717`.
 
 ### 3.7 Perbaikan Pondasi & Database Seeder Otomatis (Bug Fixes)
 - Memperbaiki `database/factories/UserFactory.php` dengan menambahkan atribut wajib `phone`.
