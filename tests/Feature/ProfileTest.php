@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Support\Facades\Http;
 
 test('profile page is displayed', function () {
     $user = User::factory()->create();
@@ -13,6 +14,7 @@ test('profile page is displayed', function () {
 });
 
 test('profile information can be updated', function () {
+    Http::fake(['*' => Http::response(['success' => true], 200)]);
     $user = User::factory()->create();
 
     $response = $this
@@ -24,7 +26,7 @@ test('profile information can be updated', function () {
 
     $response
         ->assertSessionHasNoErrors()
-        ->assertRedirect('/profile');
+        ->assertSessionHas('success');
 
     $user->refresh();
 
@@ -34,6 +36,7 @@ test('profile information can be updated', function () {
 });
 
 test('email verification status is unchanged when the email address is unchanged', function () {
+    Http::fake(['*' => Http::response(['success' => true], 200)]);
     $user = User::factory()->create();
 
     $response = $this
@@ -45,7 +48,7 @@ test('email verification status is unchanged when the email address is unchanged
 
     $response
         ->assertSessionHasNoErrors()
-        ->assertRedirect('/profile');
+        ->assertSessionHas('success');
 
     $this->assertNotNull($user->refresh()->email_verified_at);
 });

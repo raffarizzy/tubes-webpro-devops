@@ -27,6 +27,7 @@ class User extends Authenticatable
         'gender',
         'pfpPath',
         'is_verified_seller',
+        'email_verified_at',
     ];
 
     /**
