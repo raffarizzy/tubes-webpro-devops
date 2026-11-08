@@ -39,5 +39,34 @@ class Product extends Model
     {
         return $this->belongsTo(Category::class);
     }
-}
 
+    /**
+     * Mengembalikan informasi indikator status ketersediaan stok produk.
+     *
+     * @return array{label: string, color: string, level: string}
+     */
+    public static function getStockStatusBadge(int $stok): array
+    {
+        if ($stok <= 0) {
+            return [
+                'label' => 'Habis',
+                'color' => 'danger',
+                'level' => 'out_of_stock',
+            ];
+        }
+
+        if ($stok <= 5) {
+            return [
+                'label' => 'Stok Menipis',
+                'color' => 'warning',
+                'level' => 'low_stock',
+            ];
+        }
+
+        return [
+            'label' => 'Tersedia',
+            'color' => 'success',
+            'level' => 'in_stock',
+        ];
+    }
+}
