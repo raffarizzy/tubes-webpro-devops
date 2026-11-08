@@ -575,7 +575,7 @@ class TokoController extends Controller
                 return back()->with('error', 'Anda tidak memiliki akses ke pesanan ini.');
             }
 
-            if ($order->status !== 'paid') {
+            if ($order->status !== 'paid' || ! $order->canTransitionTo('processing')) {
                 return back()->with('error', 'Hanya pesanan yang sudah dibayar yang dapat diterima.');
             }
 
@@ -604,7 +604,7 @@ class TokoController extends Controller
                 return back()->with('error', 'Anda tidak memiliki akses ke pesanan ini.');
             }
 
-            if (!in_array($order->status, ['paid', 'processing'])) {
+            if (! $order->canTransitionTo('cancelled')) {
                 return back()->with('error', 'Pesanan ini tidak dapat dibatalkan.');
             }
 
@@ -637,7 +637,7 @@ class TokoController extends Controller
                 return back()->with('error', 'Anda tidak memiliki akses ke pesanan ini.');
             }
 
-            if ($order->status !== 'processing') {
+            if (! $order->canTransitionTo('shipped')) {
                 return back()->with('error', 'Hanya pesanan yang sedang diproses yang dapat dikirim.');
             }
 
