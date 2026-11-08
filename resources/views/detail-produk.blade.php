@@ -239,7 +239,7 @@
 
                 <!-- Content -->
                 <div>
-                  <p class="fw-semibold mb-1 text-dark">{{ $rating->user->name ?? 'Anonymous' }}</p>
+                  <p class="fw-semibold mb-1 text-dark">{{ $rating->user?->getMaskedName() ?? 'Anonymous' }}</p>
 
                   <div class="text-warning fw-bold" style="font-size: 14px;">
                     @for($i = 1; $i <= 5; $i++)
